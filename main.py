@@ -1,6 +1,8 @@
 from bot import CampaignCrawler
-import sys
 import json
+import sys
+
+TARGET_COUNTY = 'Montgomery'
 
 user_input = sys.argv[1]
 ccf_id = True
@@ -22,8 +24,11 @@ else:
 # get the campaign information
 crawler.add_candidate_campaigns(candidate)
 
-for campaign in candidate.campaigns:
-    print(json.dumps(campaign.__dict__, indent=4))
+# remove campaigns that are not part of the target county (for now, it's just montgomery county)
+temp_campaign_list = candidate.campaigns
+for campaign in temp_campaign_list:
+    if TARGET_COUNTY != campaign.jurisdiction:
+        candidate.campaigns.remove(campaign)
 
 crawler.quit()
 

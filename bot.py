@@ -39,8 +39,19 @@ class CampaignCrawler:
         options = webdriver.FirefoxOptions()
         options.add_argument('--headless')
 
+        self.directory = f"{os.getcwd()}/Downloads"
+        try:
+            os.mkdir(self.directory)
+        except FileExistsError:
+            pass
+
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("browser.download.folderList", 2)
+        profile.set_preference("browser.download.manager.showWhenStarting", False)
+        profile.set_preference("browser.download.dir", self.directory)
+
         # make the webdriver
-        self.driver = webdriver.Firefox(options=options)
+        self.driver = webdriver.Firefox(options=options, profile=profile)
         self.driver.maximize_window()
 
     # create a function that returns candidates
@@ -105,6 +116,23 @@ class CampaignCrawler:
 
         # add the campaigns to the Candidate datatype (object passed by reference)
         candidate.campaigns.extend(candidate_campaigns)
+
+    # create a function that gets a csv associated with the campaign
+    def download_campaign_csv(self, campaign):
+        csv_file = f"{campaign.jurisdiction}_By_Precinct_{campaign.year}_General.csv"
+        download_url = f"https://elections.maryland.gov/elections/2018/election_data/{csv_file}"
+
+        # check if the file already exists
+        files = []
+        for (dirpath, dirnames, filenames) in os.walk(self.directory):
+            files.extend(filenames)
+            break
+
+        if csv_file in files:
+            return
+        else:
+            # download it if applicable
+            self.driver.get(download_url)
 
     # create a function that formats table rows
     def format_row(self, row):
