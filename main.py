@@ -1,5 +1,6 @@
 from bot import CampaignCrawler
 import sys
+import json
 
 user_input = sys.argv[1]
 ccf_id = True
@@ -19,3 +20,14 @@ else:
     candidate = crawler.find_candidate(name=user_input)
 
 # get the campaign information
+crawler.add_candidate_campaigns(candidate)
+
+for campaign in candidate.campaigns:
+    print(json.dumps(campaign.__dict__, indent=4))
+
+crawler.quit()
+
+'''
+NOTES
+- test ccf id: 01008957
+'''

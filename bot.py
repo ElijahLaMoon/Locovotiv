@@ -1,4 +1,5 @@
 from selenium import webdriver
+from multiprocessing import Pool
 import time
 import os
 
@@ -9,7 +10,17 @@ MAX_PROCESSES = os.cpu_count() * 2
 class Campaign:
     def __init__(self, table_row):
         # use operations on the table row to get the campaign information
-        stuff = ''
+        self.year = table_row[0]
+        self.election_type = table_row[1]
+        self.office_type = table_row[2]
+        self.office_sought = table_row[3]
+        self.jurisdiction = table_row[4]
+        self.party_affiliation = table_row[5]
+        self.participation_frequency = table_row[6]
+        self.start_date = table_row[7]
+
+    def __repr__(self):
+        return f"{self.year} {self.office_sought} ({self.jurisdiction})"
 
 
 # create a candidate class to store candidate information
@@ -20,10 +31,6 @@ class Candidate:
         self.campaign_link = campaign_link
 
         self.campaigns = []
-
-    # use the campaign object to add campaigns
-    def add_campaign(self, campaign):
-        self.campaigns.append(campaign)
 
 
 # this class does all the web crawling (so we can multiprocess the other ones)
@@ -37,7 +44,7 @@ class CampaignCrawler:
         self.driver.maximize_window()
 
     # create a function that returns candidates
-    def find_candidate(self, name=None, ccf=None):
+    def find_candidate(self, name=None, ccf_id=None):
         url = 'https://campaignfinance.maryland.gov/Public/ViewCommiteesMain'
 
         # get the site
@@ -50,14 +57,14 @@ class CampaignCrawler:
         time.sleep(2)
 
         # enter candidate information
-        if ccf:
+        if ccf_id:
             ccf_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeID"]')
-            ccf_box.send_keys(ccf)
+            ccf_box.send_keys(ccf_id)
         if name:
             name_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeName"]')
             name_box.send_keys(name)
 
-        if not (ccf or name):
+        if not (ccf_id or name):
             return "No input data provided"
 
         # click search
@@ -80,6 +87,30 @@ class CampaignCrawler:
         new_candidate = Candidate(name, ccf_id, campaign_link)
 
         return new_candidate
+
+    # create a function to get the campaign information and add it to the candidate
+    def add_candidate_campaigns(self, candidate):
+        # get the campaign link
+        url = candidate.campaign_link
+        self.driver.get(url)
+
+        # get the candidate information table
+        table_rows = self.driver.find_elements_by_xpath('//td[@id="tdOfficeSoughtList"]//tbody//tr')
+
+        table_rows = [self.format_row(row) for row in table_rows]
+
+        with Pool(processes=MAX_PROCESSES) as pool:
+            # map all the table rows to the campaign datatype and add them to
+            candidate_campaigns = pool.map(Campaign, table_rows)
+
+        # add the campaigns to the Candidate datatype (object passed by reference)
+        candidate.campaigns.extend(candidate_campaigns)
+
+    # create a function that formats table rows
+    def format_row(self, row):
+        row_list = [cell.text for cell in row.find_elements_by_tag_name('td')]
+
+        return row_list
 
     def quit(self):
         self.driver.quit()
