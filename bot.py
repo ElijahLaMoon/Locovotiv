@@ -1,17 +1,43 @@
 from selenium import webdriver
 import time
+import os
+
+MAX_PROCESSES = os.cpu_count() * 2
 
 
+# create a class about campaigns
+class Campaign:
+    def __init__(self, table_row):
+        # use operations on the table row to get the campaign information
+        stuff = ''
+
+
+# create a candidate class to store candidate information
+class Candidate:
+    def __init__(self, name, ccf_id, campaign_link):
+        self.name = name
+        self.ccf_id = ccf_id
+        self.campaign_link = campaign_link
+
+        self.campaigns = []
+
+    # use the campaign object to add campaigns
+    def add_campaign(self, campaign):
+        self.campaigns.append(campaign)
+
+
+# this class does all the web crawling (so we can multiprocess the other ones)
 class CampaignCrawler:
     def __init__(self):
-        options = webdriver.ChromeOptions()
-        # options.add_argument('--headless')
+        options = webdriver.FirefoxOptions()
+        options.add_argument('--headless')
 
         # make the webdriver
-        self.driver = webdriver.Chrome(options=options)
+        self.driver = webdriver.Firefox(options=options)
         self.driver.maximize_window()
 
-    def get_campaign_link(self, name=None, ccf=None):
+    # create a function that returns candidates
+    def find_candidate(self, name=None, ccf=None):
         url = 'https://campaignfinance.maryland.gov/Public/ViewCommiteesMain'
 
         # get the site
@@ -40,12 +66,20 @@ class CampaignCrawler:
         time.sleep(3)
 
         # load up the entire information table
-        info_table = self.driver.find_elements_by_xpath('//div[@id="Grid"]//table//tbody//tr')
-        top_candidate_info = info_table[0].find_elements_by_xpath('//td')
+        info_cells = self.driver.find_elements_by_xpath('//div[@id="Grid"]//table//tbody//tr//td')
 
         # get the ccf ID and link for the campaign
-        self.ccf_id = top_candidate_info[1].text
+        ccf_id = info_cells[1].text
 
-        candidate_info_link = top_candidate_info[2].find_element_by_xpath('//a').get_attribute('href')
+        candidate_info = info_cells[2].find_element_by_tag_name('a')
+        campaign_link = candidate_info.get_attribute('href')
 
-        return candidate_info_link
+        # get the candidate name
+        name = candidate_info.text
+
+        new_candidate = Candidate(name, ccf_id, campaign_link)
+
+        return new_candidate
+
+    def quit(self):
+        self.driver.quit()
