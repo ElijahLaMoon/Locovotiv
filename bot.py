@@ -1,9 +1,13 @@
 from selenium import webdriver
 from multiprocessing import Pool
+from datetime import datetime as dt
+import requests
 import time
 import os
 
 MAX_PROCESSES = os.cpu_count() * 2
+
+DATE = dt.now()
 
 
 # create a class about campaigns
@@ -45,13 +49,8 @@ class CampaignCrawler:
         except FileExistsError:
             pass
 
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference("browser.download.folderList", 2)
-        profile.set_preference("browser.download.manager.showWhenStarting", False)
-        profile.set_preference("browser.download.dir", self.directory)
-
         # make the webdriver
-        self.driver = webdriver.Firefox(options=options, profile=profile)
+        self.driver = webdriver.Firefox(options=options)
         self.driver.maximize_window()
 
     # create a function that returns candidates
@@ -120,7 +119,7 @@ class CampaignCrawler:
     # create a function that gets a csv associated with the campaign
     def download_campaign_csv(self, campaign):
         csv_file = f"{campaign.jurisdiction}_By_Precinct_{campaign.year}_General.csv"
-        download_url = f"https://elections.maryland.gov/elections/2018/election_data/{csv_file}"
+        download_url = f"https://elections.maryland.gov/elections/{campaign.year}/election_data/{csv_file}"
 
         # check if the file already exists
         files = []
@@ -130,9 +129,14 @@ class CampaignCrawler:
 
         if csv_file in files:
             return
+        elif DATE.year == int(campaign.year):
+            return
         else:
             # download it if applicable
-            self.driver.get(download_url)
+            response = requests.get(download_url)
+
+            with open(f"{self.directory}/{csv_file}", 'wb') as outfile:
+                outfile.write(response.content)
 
     # create a function that formats table rows
     def format_row(self, row):

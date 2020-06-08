@@ -1,5 +1,4 @@
 from bot import CampaignCrawler
-import json
 import sys
 
 TARGET_COUNTY = 'Montgomery'
@@ -29,6 +28,10 @@ temp_campaign_list = candidate.campaigns
 for campaign in temp_campaign_list:
     if TARGET_COUNTY != campaign.jurisdiction:
         candidate.campaigns.remove(campaign)
+
+# download all the data for the files (multiprocessed of course)
+for campaign in candidate.campaigns:
+    crawler.download_campaign_csv(campaign)
 
 crawler.quit()
 
