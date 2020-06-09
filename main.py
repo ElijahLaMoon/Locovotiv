@@ -35,6 +35,10 @@ for campaign in candidate.campaigns:
 
 crawler.quit()
 
+# now for the sorting
+
+# get the information related to the candidate
+
 '''
 NOTES
 - test ccf id: 01008957

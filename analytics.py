@@ -1,0 +1,97 @@
+import pandas as pd
+import numpy as np
+import os
+
+
+# create a class to organize voting information by precinct
+class PrecinctPoll:
+    def __init__(self, precinct_df, candidate):
+        self.candidate = candidate
+
+        total_votes = len(precinct_df)
+
+        # calculate the amount of people that voted for the candidate (and didn't)
+        voted_for_rows = precinct_df['Candidate Name'] != candidate
+        self.votes_for = len(precinct_df[voted_for_rows])
+        self.votes_against = total_votes - self.votes_for
+
+        self.percentage_for = self.votes_for / total_votes
+
+    def output_row(self, precinct):
+        row = [self.votes_against, self.votes_for, self.percentage_for]
+        return row
+
+    def __repr__(self):
+        return f"{self.candidate} - {round(self.percentage_for * 100)}% ({self.votes_for}/{self.votes_against})"
+
+
+# create a class that sorts the data
+class DataManager:
+    def __init__(self, filename):
+        self.filename = filename
+        self.master_df = pd.read_csv(filename)
+
+        # set up the dataframe correctly
+        self.master_df = self.master_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+        # set up precincts
+        counties = np.array(self.master_df['Election District']) * 1000
+        precincts = np.array(self.master_df['Election Precinct'])
+        precinct_codes = counties + precincts
+
+        self.master_df.drop(columns=['County', 'Election District', 'Election Precinct'], inplace=True)
+
+        # add the precinct data back
+        self.master_df = pd.concat([pd.DataFrame(precinct_codes, columns=['Precinct']), self.master_df], axis=1)
+
+    # create a class to get a particular candidate's records
+
+    def filter_records(self, column, value, filtering_df=pd.DataFrame()):
+        # check if the user reset the filtering df (default to the master)
+        if filtering_df.empty:
+            filtering_df = self.master_df
+
+        valid_rows = filtering_df[column] == value
+
+        applicable_df = filtering_df[valid_rows]
+
+        return applicable_df
+
+    def export_master(self, column, value):
+        # make a directory for the value (usually a name)
+        new_directory = f"{os.getcwd()}/{value}"
+        try:
+            os.mkdir(new_directory)
+        except FileExistsError:
+            pass
+
+        # overwrite the existing file no matter what
+        new_filepath = f"{new_directory}/({value}) {self.filename}"
+        new_df = self.filter_records(column, value)
+        new_df.to_csv(new_filepath, index=False)
+
+    # create a function that returns a dataframe of sorted information
+    def sort_file(self, office_name, candidate):
+        office_votes_df = self.filter_records('Candidate Name', candidate)
+
+        # sort the dataframe into precincts
+        precincts = list(set(office_votes_df['Precinct']))
+        precincts.sort()
+
+        precinct_dfs = [self.filter_records('Precinct', precinct, filtering_df=office_votes_df) for precinct in precincts]
+        print(precinct_dfs[0])
+
+        # create a bunch of precinct poll data types based on the precinct dataframes
+        precinct_polls = [PrecinctPoll(df, candidate) for df in precinct_dfs]
+
+        return precinct_polls
+
+
+# create a class that can compare between years
+
+
+'''
+NOTES
+- opponent {year} --> just all the people that didnt vote for the candidate
+    - this calculates
+'''
