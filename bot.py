@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from multiprocessing import Pool
 from datetime import datetime as dt
 import requests
@@ -68,18 +69,17 @@ class CampaignCrawler:
 
         # enter candidate information
         if ccf_id:
-            ccf_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeID"]')
-            ccf_box.send_keys(ccf_id)
+            input_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeID"]')
+            input_box.send_keys(ccf_id)
         if name:
-            name_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeName"]')
-            name_box.send_keys(name)
+            input_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeName"]')
+            input_box.send_keys(name)
 
         if not (ccf_id or name):
             return "No input data provided"
 
-        # click search
-        search_button = self.driver.find_element_by_xpath('//input[@id="btnSearch"]')
-        search_button.click()
+        # hit enter
+        input_box.send_keys(Keys.ENTER)
         time.sleep(3)
 
         # load up the entire information table
