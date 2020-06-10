@@ -7,22 +7,25 @@ import os
 class PrecinctPoll:
     def __init__(self, precinct_df, candidate):
         self.candidate = candidate
-
-        total_votes = len(precinct_df)
+        self.precinct = list(precinct_df['Precinct'])[0]
 
         # calculate the amount of people that voted for the candidate (and didn't)
-        voted_for_rows = precinct_df['Candidate Name'] != candidate
-        self.votes_for = len(precinct_df[voted_for_rows])
-        self.votes_against = total_votes - self.votes_for
+        candidate_bool = precinct_df['Candidate Name'] == candidate
+        candidate_row = precinct_df[candidate_bool]
+        self.votes_for = int(candidate_row['Election Night Votes'])
 
-        self.percentage_for = self.votes_for / total_votes
+        self.total_votes = sum(precinct_df['Election Night Votes'])
+
+        self.votes_against = self.total_votes - self.votes_for
+
+        self.percentage_for = self.votes_for / self.total_votes
 
     def output_row(self, precinct):
         row = [self.votes_against, self.votes_for, self.percentage_for]
         return row
 
     def __repr__(self):
-        return f"{self.candidate} - {round(self.percentage_for * 100)}% ({self.votes_for}/{self.votes_against})"
+        return f"{self.precinct} {self.candidate} - {round(self.percentage_for * 100)}% ({self.votes_for}/{self.total_votes})"
 
 
 # create a class that sorts the data
@@ -72,14 +75,13 @@ class DataManager:
 
     # create a function that returns a dataframe of sorted information
     def sort_file(self, office_name, candidate):
-        office_votes_df = self.filter_records('Candidate Name', candidate)
+        office_votes_df = self.filter_records('Office Name', office_name)
 
         # sort the dataframe into precincts
         precincts = list(set(office_votes_df['Precinct']))
         precincts.sort()
 
         precinct_dfs = [self.filter_records('Precinct', precinct, filtering_df=office_votes_df) for precinct in precincts]
-        print(precinct_dfs[0])
 
         # create a bunch of precinct poll data types based on the precinct dataframes
         precinct_polls = [PrecinctPoll(df, candidate) for df in precinct_dfs]
