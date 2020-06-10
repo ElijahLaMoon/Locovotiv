@@ -67,7 +67,7 @@ for manager in managers:
 end = time.time()
 print(f"It took {round(lap - start, 2)} seconds to crawl sites.")
 print(f'It took {round(end - lap, 2)} seconds to create analytics CSVs.')
-print(f"It took {round(end - start, 2)} seconds to perform entire process.")
+print(f"It took {round(end - start, 2)} seconds to perform the entire process.")
 
 '''
 NOTES
