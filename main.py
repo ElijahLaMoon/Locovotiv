@@ -3,6 +3,7 @@ from analytics import DataManager
 import time
 import sys
 
+start = time.time()
 TARGET_COUNTY = 'Montgomery'
 
 user_input = sys.argv[1]
@@ -41,7 +42,7 @@ if None in filepaths:
 crawler.quit()
 
 # now for the sorting --> make some managers
-start = time.time()
+lap = time.time()
 
 managers = [DataManager(path) for path in filepaths]
 
@@ -50,13 +51,14 @@ count = 0
 for manager in managers:
     campaign = candidate.campaigns[count]
 
-    manager.sort_and_export(campaign.office_sought, candidate.name)
+    manager.sort_and_export(campaign.office_sought, candidate.name, campaign.year)
     count += 1
 
 
 end = time.time()
-
-print(f'It took {end - start} seconds to create analytics CSVs.')
+print(f"It took {lap - start} seconds to crawl sites.")
+print(f'It took {end - lap} seconds to create analytics CSVs.')
+print(f"It took {end - start} seconds to perform entire process.")
 
 '''
 NOTES

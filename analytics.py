@@ -26,10 +26,13 @@ class PrecinctPoll:
 
         self.votes_against = self.total_votes - self.votes_for
 
-        self.percentage_for = self.votes_for / self.total_votes
+        try:
+            self.percentage_for = self.votes_for / self.total_votes
+        except ZeroDivisionError:
+            self.percentage_for = 'X'
 
     def output_row(self):
-        row = [self.votes_against, self.votes_for, self.percentage_for]
+        row = [self.precinct, self.votes_against, self.votes_for, self.percentage_for]
         return row
 
     def __repr__(self):
@@ -98,6 +101,7 @@ class DataManager:
 
     # create a function that outputs the precinct data
     def sort_and_export(self, office_name, candidate, year):
+        headers = ['Precinct', f"Opponent {year}", f"{candidate} {year}", f"{candidate} Percentage {year}"]
         precinct_polls = self.sort_file(office_name, candidate)
 
         # create a folder if necessary
@@ -109,10 +113,10 @@ class DataManager:
 
         # format the data into a dataframe
         data = [poll.output_row() for poll in precinct_polls]
-        output_df = pd.DataFrame(data, columns=self.master_df.columns)
+        output_df = pd.DataFrame(data, columns=headers)
 
-        # output the dataframe
-        output_df.to_csv(f"{self.directory}/{office_name} {year}.csv")
+        # output the dataframe (no matter what --> want it to be most recent)
+        output_df.to_csv(f"{self.directory}/{office_name} {year}.csv", index=False)
 
 
 # create a class that can compare between years
