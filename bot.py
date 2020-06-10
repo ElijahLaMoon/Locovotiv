@@ -60,29 +60,27 @@ class CampaignCrawler:
 
         # get the site
         self.driver.get(url)
-        time.sleep(2)
+        time.sleep(4)
 
         # click continue
         continue_button = self.driver.find_element_by_xpath('//input[@title="Continue"]')
         continue_button.click()
-        time.sleep(2)
+        time.sleep(4)
 
         # enter candidate information
         name_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeName"]')
         if ccf_id:
             input_box = self.driver.find_element_by_xpath('//input[@id="txtCommitteeID"]')
-            input_box.send_keys(ccf_id)
-            input_box.send_keys(Keys.TAB)
+            input_box.send_keys(str(ccf_id))
+            input_box.send_keys(Keys.ENTER)
         if name:
             name_box.send_keys(name)
+            name_box.send_keys(Keys.ENTER)
 
         if not (ccf_id or name):
             return "No input data provided"
 
-        # hit enter
-        name_box.click()
-        name_box.send_keys(Keys.ENTER)
-        time.sleep(3)
+        time.sleep(6)
 
         # load up the entire information table
         info_cells = self.driver.find_elements_by_xpath('//div[@id="Grid"]//table//tbody//tr//td')
