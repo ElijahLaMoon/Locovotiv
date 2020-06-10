@@ -1,10 +1,12 @@
 from bot import CampaignCrawler
 from analytics import DataManager
+from datetime import datetime as dt
 import time
 import sys
 
 start = time.time()
 TARGET_COUNTY = 'Montgomery'
+DATE = dt.now()
 
 user_input = sys.argv[1]
 ccf_id = True
@@ -35,7 +37,7 @@ for campaign in temp_campaign_list:
 # download all the data for the files --> store filepaths
 filepaths = [crawler.download_campaign_csv(campaign) for campaign in candidate.campaigns]
 
-# return the nonetype
+# return the nonetype --> only happens for current year
 if None in filepaths:
     filepaths.remove(None)
 
@@ -48,6 +50,13 @@ managers = [DataManager(path) for path in filepaths]
 
 # make the csvs --> make a folder and export
 count = 0
+
+# make sure the campaigns start at the right date
+temp_campaign_list = candidate.campaigns
+for campaign in temp_campaign_list:
+    if int(campaign.year) == int(DATE.year):
+        candidate.campaigns.remove(campaign)
+
 for manager in managers:
     campaign = candidate.campaigns[count]
 
@@ -56,9 +65,9 @@ for manager in managers:
 
 
 end = time.time()
-print(f"It took {lap - start} seconds to crawl sites.")
-print(f'It took {end - lap} seconds to create analytics CSVs.')
-print(f"It took {end - start} seconds to perform entire process.")
+print(f"It took {round(lap - start, 2)} seconds to crawl sites.")
+print(f'It took {round(end - lap, 2)} seconds to create analytics CSVs.')
+print(f"It took {round(end - start, 2)} seconds to perform entire process.")
 
 '''
 NOTES
