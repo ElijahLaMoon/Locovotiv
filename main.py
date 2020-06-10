@@ -5,7 +5,7 @@ import time
 import sys
 
 start = time.time()
-TARGET_COUNTY = 'Montgomery'
+TARGET_COUNTY = sys.argv[2]
 DATE = dt.now()
 
 user_input = sys.argv[1]
@@ -32,7 +32,8 @@ crawler.add_candidate_campaigns(candidate)
 temp_campaign_list = candidate.campaigns
 for campaign in temp_campaign_list:
     if TARGET_COUNTY != campaign.jurisdiction:
-        candidate.campaigns.remove(campaign)
+        campaign.jurisdiction = TARGET_COUNTY
+
 
 # download all the data for the files --> store filepaths
 filepaths = [crawler.download_campaign_csv(campaign) for campaign in candidate.campaigns]

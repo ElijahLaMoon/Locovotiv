@@ -20,7 +20,7 @@ class PrecinctPoll:
             candidate_bool = precinct_df['Candidate Name'] == simple_name
             candidate_row = precinct_df[candidate_bool]
 
-        self.votes_for = int(candidate_row['Election Night Votes'])
+        self.votes_for = sum(candidate_row['Election Night Votes'])
 
         self.total_votes = sum(precinct_df['Election Night Votes'])
 
