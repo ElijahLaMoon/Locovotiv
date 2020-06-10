@@ -116,10 +116,14 @@ class CampaignCrawler:
         # add the campaigns to the Candidate datatype (object passed by reference)
         candidate.campaigns.extend(candidate_campaigns)
 
+        # change the candidate name to update from the commitee name
+        candidate.name = self.driver.find_elements_by_xpath('//td[@id="CandidateList"]//tbody//tr//td')[0].text.title()
+
     # create a function that gets a csv associated with the campaign
     def download_campaign_csv(self, campaign):
         csv_file = f"{campaign.jurisdiction}_By_Precinct_{campaign.year}_General.csv"
         download_url = f"https://elections.maryland.gov/elections/{campaign.year}/election_data/{csv_file}"
+        path = f"{self.directory}/{csv_file}"
 
         # check if the file already exists
         files = []
@@ -128,15 +132,17 @@ class CampaignCrawler:
             break
 
         if csv_file in files:
-            return
+            return path
         elif DATE.year == int(campaign.year):
-            return
+            return None
         else:
             # download it if applicable
             response = requests.get(download_url)
 
-            with open(f"{self.directory}/{csv_file}", 'wb') as outfile:
+            with open(path, 'wb') as outfile:
                 outfile.write(response.content)
+
+        return path
 
     # create a function that formats table rows
     def format_row(self, row):

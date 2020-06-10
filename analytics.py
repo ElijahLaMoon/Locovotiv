@@ -12,6 +12,14 @@ class PrecinctPoll:
         # calculate the amount of people that voted for the candidate (and didn't)
         candidate_bool = precinct_df['Candidate Name'] == candidate
         candidate_row = precinct_df[candidate_bool]
+
+        # use the first and last names if there is no data in the candidate row
+        if len(candidate_row) == 0:
+            names = candidate.split(' ')
+            simple_name = f"{names[0]} {names[-1]}"
+            candidate_bool = precinct_df['Candidate Name'] == simple_name
+            candidate_row = precinct_df[candidate_bool]
+
         self.votes_for = int(candidate_row['Election Night Votes'])
 
         self.total_votes = sum(precinct_df['Election Night Votes'])
@@ -20,7 +28,7 @@ class PrecinctPoll:
 
         self.percentage_for = self.votes_for / self.total_votes
 
-    def output_row(self, precinct):
+    def output_row(self):
         row = [self.votes_against, self.votes_for, self.percentage_for]
         return row
 
@@ -87,6 +95,24 @@ class DataManager:
         precinct_polls = [PrecinctPoll(df, candidate) for df in precinct_dfs]
 
         return precinct_polls
+
+    # create a function that outputs the precinct data
+    def sort_and_export(self, office_name, candidate, year):
+        precinct_polls = self.sort_file(office_name, candidate)
+
+        # create a folder if necessary
+        self.directory = f"{os.getcwd()}/{candidate}"
+        try:
+            os.mkdir(self.directory)
+        except FileExistsError:
+            pass
+
+        # format the data into a dataframe
+        data = [poll.output_row() for poll in precinct_polls]
+        output_df = pd.DataFrame(data, columns=self.master_df.columns)
+
+        # output the dataframe
+        output_df.to_csv(f"{self.directory}/{office_name} {year}.csv")
 
 
 # create a class that can compare between years

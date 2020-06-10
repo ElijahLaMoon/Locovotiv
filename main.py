@@ -1,4 +1,6 @@
 from bot import CampaignCrawler
+from analytics import DataManager
+import time
 import sys
 
 TARGET_COUNTY = 'Montgomery'
@@ -29,15 +31,32 @@ for campaign in temp_campaign_list:
     if TARGET_COUNTY != campaign.jurisdiction:
         candidate.campaigns.remove(campaign)
 
-# download all the data for the files (multiprocessed of course)
-for campaign in candidate.campaigns:
-    crawler.download_campaign_csv(campaign)
+# download all the data for the files --> store filepaths
+filepaths = [crawler.download_campaign_csv(campaign) for campaign in candidate.campaigns]
+
+# return the nonetype
+if None in filepaths:
+    filepaths.remove(None)
 
 crawler.quit()
 
-# now for the sorting
+# now for the sorting --> make some managers
+start = time.time()
 
-# get the information related to the candidate
+managers = [DataManager(path) for path in filepaths]
+
+# make the csvs --> make a folder and export
+count = 0
+for manager in managers:
+    campaign = candidate.campaigns[count]
+
+    manager.sort_and_export(campaign.office_sought, candidate.name)
+    count += 1
+
+
+end = time.time()
+
+print(f'It took {end - start} seconds to create analytics CSVs.')
 
 '''
 NOTES
