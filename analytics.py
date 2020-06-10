@@ -101,7 +101,7 @@ class DataManager:
 
     # create a function that outputs the precinct data
     def sort_and_export(self, office_name, candidate, year):
-        headers = ['Precinct', f"Opponent {year}", f"{candidate} {year}", f"{candidate} Percentage {year}"]
+        headers = ['Precinct', f"Opposing Ballots {year}", f"{candidate} {year}", f"{candidate} Percentage {year}"]
         precinct_polls = self.sort_file(office_name, candidate)
 
         # create a folder if necessary
