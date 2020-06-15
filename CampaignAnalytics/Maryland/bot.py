@@ -44,7 +44,7 @@ class CampaignCrawler:
         options = webdriver.FirefoxOptions()
         options.add_argument('--headless')
 
-        self.directory = f"{os.getcwd()}/Downloads"
+        self.directory = f"{os.getcwd()}/Downloads/Maryland"
         try:
             os.mkdir(self.directory)
         except FileExistsError:
