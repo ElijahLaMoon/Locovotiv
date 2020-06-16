@@ -5,7 +5,7 @@ import time
 import sys
 
 start = time.time()
-TARGET_COUNTY = sys.argv[2]
+TARGET_COUNTY = sys.argv[2].strip().title()
 DATE = dt.now()
 
 user_input = sys.argv[1]
