@@ -1,5 +1,5 @@
 from CampaignAnalytics.Maryland.bot import CampaignCrawler
-from CampaignAnalytics.analytics import DataManager
+from CampaignAnalytics.Maryland.analytics import DataManager
 from datetime import datetime as dt
 import time
 import sys
