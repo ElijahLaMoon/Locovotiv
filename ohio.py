@@ -27,7 +27,7 @@ crawler.quit()
 lap = time.time()
 
 # analyze each data path with a campaign analyzer
-analysts = [CampaignAnalyzer(path) for path in data_paths]
+analysts = [CampaignAnalyzer(path) for path in data_paths if path]
 
 # get office frames for all of the years --> use OG NAME
 office_frames = [analyst.get_office_data(OFFICE_LEVEL) for analyst in analysts]

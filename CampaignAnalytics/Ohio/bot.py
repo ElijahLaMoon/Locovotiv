@@ -51,25 +51,24 @@ class CampaignCrawler(Crawler, DataManager):
 
         # use the available information to create a candidate object (no ccf id in ohio)
         candidate_information_potentials = self.driver.find_elements_by_xpath('//tr[@class="highlight-row"]')
-        candidate_information_raw = None
 
+        count = 0
         for potential in candidate_information_potentials:
-            test_activity = potential.find_element_by_xpath('//td[@headers="STATUS"]').text.strip().lower().split(' ')
-            print(test_activity)
-            if 'active' in test_activity:
-                candidate_information_raw = potential
+            test_activity = potential.text.strip().lower().split(' ')
+            test_bool = 'active' in test_activity
+            if test_bool:
+                candidate_name = self.driver.find_elements_by_xpath('//tr[@class="highlight-row"]//td[@headers="ID_COMB_NAME"]')[count].text
+                ccf_id = self.driver.find_elements_by_xpath('//tr[@class="highlight-row"]//td[@headers="EN_PAC_NO"]')[count].text
+                campaign_link = self.driver.find_elements_by_xpath('//tr[@class="highlight-row"]//td[@headers="LINK$03"]//a')[count].get_attribute('href')
+
+                new_candidate = Candidate(candidate_name, ccf_id, campaign_link)
+
+                return new_candidate
                 break
+            count += 1
 
-        if candidate_information_raw:
-            candidate_name = candidate_information_raw.find_element_by_xpath('//td[@headers="ID_COMB_NAME"]').text
-            ccf_id = candidate_information_raw.find_element_by_xpath('//td[@headers="EN_PAC_NO"]').text
-            campaign_link = candidate_information_raw.find_element_by_xpath('//td[@headers="LINK$03"]//a').get_attribute('href')
-
-            new_candidate = Candidate(candidate_name, ccf_id, campaign_link)
-
-            return new_candidate
-        else:
-            return None
+        # only reaches here if no candidate was found
+        return None
 
     # create a function to add campaign information (only years are available here)
     def get_running_years(self, candidate):
@@ -86,13 +85,11 @@ class CampaignCrawler(Crawler, DataManager):
         while True:
             try:
                 new_years = {int(element.text) for element in self.driver.find_elements_by_xpath('//td[@headers="RP_YEAR"]')}
-                print(new_years)
                 years = years | new_years
                 next_page_button = self.driver.find_element_by_xpath('//a[@class="sPaginationNext"]')
                 next_page_button.click()
                 time.sleep(5)
             except NoSuchElementException:
-                print(years)
                 break
 
         years = {year for year in years if ((year < MAX_YEAR) and (year > MIN_YEAR))}
@@ -103,7 +100,13 @@ class CampaignCrawler(Crawler, DataManager):
         # match the data with the current info (see txt file)
         link_df = pd.read_csv(self.link_csv)
         offices_df = self.filter_records('Election Year', year, filtering_df=link_df)
-        download_link = list(self.filter_records('Offices', office_level, filtering_df=offices_df)['File Name'])[0]
+
+        if not offices_df.empty:
+            print(f"Found records for {year}")
+            download_link = list(self.filter_records('Offices', office_level, filtering_df=offices_df)['File Name'])[0]
+        else:
+            print(f"Did not find records for {year}")
+            return
 
         # download the correct year and office
         filename = download_link.split('/')[-1]
