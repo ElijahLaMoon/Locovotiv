@@ -1,4 +1,4 @@
-from CampaignAnalytics import DataManager
+from CampaignAnalytics import DataManager, AnalysisExporter
 import pandas as pd
 import numpy as np
 import os
@@ -33,7 +33,7 @@ class PrecinctPoll:
             self.percentage_for = 'X'
 
     def output_row(self):
-        row = [self.precinct, self.votes_against, self.votes_for, self.percentage_for]
+        row = [self.precinct, self.votes_for, self.votes_against, self.percentage_for]
         return row
 
     def __repr__(self):
@@ -41,7 +41,7 @@ class PrecinctPoll:
 
 
 # create a class that sorts the data
-class CampaignAnalyzer(DataManager):
+class CampaignAnalyzer(DataManager, AnalysisExporter):
     def __init__(self, filename):
         self.filename = filename
         self.master_df = self.setup_df(pd.read_csv(filename))
@@ -73,7 +73,6 @@ class CampaignAnalyzer(DataManager):
 
     # create a function that outputs the precinct data
     def sort_and_export(self, office_name, candidate, year):
-        headers = ['Precinct', f"Opposing Ballots {year}", f"{candidate} {year}", f"{candidate} Percentage {year}"]
         precinct_polls = self.sort_file(office_name, candidate)
 
         # create a folder if necessary
@@ -83,9 +82,12 @@ class CampaignAnalyzer(DataManager):
         except FileExistsError:
             pass
 
-        # format the data into a dataframe
-        data = [poll.output_row() for poll in precinct_polls]
-        output_df = pd.DataFrame(data, columns=headers)
+        # format the data into a dataframe (make it readable for the exporter class)
+        precincts = [poll.precinct for poll in precinct_polls]
+        votes_for = [poll.votes_for for poll in precinct_polls]
+        total_votes = [poll.total_votes for poll in precinct_polls]
+
+        output_df = self.sort_df_by_precinct(precincts, votes_for, total_votes, candidate, year)
 
         # output the dataframe (no matter what --> want it to be most recent)
         output_df.to_csv(f"{self.directory}/{office_name} {year}.csv", index=False)

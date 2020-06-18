@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 import pandas as pd
+import numpy as np
 import requests
 from urllib.request import urlopen
 from contextlib import closing
@@ -61,6 +62,30 @@ class Crawler:
 
     def quit(self):
         self.driver.quit()
+
+
+# create an exporting class
+class AnalysisExporter:
+    def sort_df_by_precinct(self, precincts, votes_for, total_votes, candidate, year):
+        # make them all arrays if not yet
+        precincts = np.array(precincts)
+        votes_for = np.array(votes_for).astype(int)
+        total_votes = np.array(total_votes).astype(int)
+
+        # make additional calculations
+        votes_against = total_votes - votes_for
+        vote_percentages = votes_for / total_votes
+
+        data = {
+            'Precinct': precincts,
+            f"{candidate} {year}": votes_for,
+            'Opposing Ballots': votes_against,
+            f"{candidate} {year} percentage": vote_percentages
+        }
+
+        df = pd.DataFrame(data)
+
+        return df
 
 
 # create a base class for analytics to build off of

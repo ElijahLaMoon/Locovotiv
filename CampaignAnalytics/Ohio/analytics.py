@@ -1,4 +1,4 @@
-from CampaignAnalytics import DataManager
+from CampaignAnalytics import DataManager, AnalysisExporter
 from difflib import get_close_matches
 import pandas as pd
 import numpy as np
@@ -6,7 +6,7 @@ import os
 
 
 # create a class that handles all the office data automatically (splits it correctly)
-class OfficeFrame:
+class OfficeFrame(AnalysisExporter):
     def __init__(self, office_name, year, full_df):
         # remember the office name and year
         self.office_name = office_name
@@ -55,20 +55,9 @@ class OfficeFrame:
         for col in voting_cols:
             total_votes += col
 
-        votes_against = total_votes - votes_for
-        vote_percentages = votes_for / total_votes
-
         precincts = np.array(self.office_df.index)
 
-        # put the data together and make a dataframe
-        data = {
-            'Precinct': precincts,
-            'Opposing Ballots': votes_against,
-            f"{closest_candidate} {self.year}": votes_for,
-            f"{closest_candidate} {self.year} percentage": vote_percentages
-        }
-
-        output_df = pd.DataFrame(data)
+        output_df = self.sort_df_by_precinct(precincts, votes_for, total_votes, closest_candidate, self.year)
 
         # send it to a csv
 
