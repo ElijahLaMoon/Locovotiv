@@ -45,13 +45,13 @@ class OfficeFrame(AnalysisExporter):
         closest_candidate = get_close_matches(inputted_candidate, self.candidates)[0]
 
         # get the candidate votes column
-        votes_for = np.array(self.office_df[closest_candidate]).astype(int)
+        votes_for = np.array(self.office_df[closest_candidate]).astype(float)
 
         # get the total votes
-        voting_cols = [np.array(self.office_df[candidate]).astype(int) for candidate in self.candidates]
+        voting_cols = [np.array(self.office_df[candidate]).astype(float) for candidate in self.candidates]
 
         # add the votes together
-        total_votes = np.array([0 for i in votes_for])
+        total_votes = np.array([0 for i in votes_for]).astype(float)
         for col in voting_cols:
             total_votes += col
 

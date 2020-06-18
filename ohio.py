@@ -30,7 +30,7 @@ lap = time.time()
 analysts = [CampaignAnalyzer(path) for path in data_paths if path]
 
 # get office frames for all of the years --> use OG NAME
-office_frames = [analyst.get_office_data(OFFICE_LEVEL) for analyst in analysts]
+office_frames = [analyst.get_office_data(OFFICE) for analyst in analysts]
 
 # export the office frames one by one
 for frame in office_frames:

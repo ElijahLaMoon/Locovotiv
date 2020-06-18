@@ -92,7 +92,7 @@ class CampaignCrawler(Crawler, DataManager):
             except NoSuchElementException:
                 break
 
-        years = {year for year in years if ((year < MAX_YEAR) and (year > MIN_YEAR))}
+        years = {year for year in years if ((year <= MAX_YEAR) and (year >= MIN_YEAR))}
         return years
 
     # this gets all the campaign data for a candidate (no years available)
@@ -102,10 +102,8 @@ class CampaignCrawler(Crawler, DataManager):
         offices_df = self.filter_records('Election Year', year, filtering_df=link_df)
 
         if not offices_df.empty:
-            print(f"Found records for {year}")
             download_link = list(self.filter_records('Offices', office_level, filtering_df=offices_df)['File Name'])[0]
         else:
-            print(f"Did not find records for {year}")
             return
 
         # download the correct year and office
@@ -116,6 +114,14 @@ class CampaignCrawler(Crawler, DataManager):
             filename = f"{year}_{filename}"
 
         path = f"{self.directory}/{filename}"
+
+        # check if the file already exists
+        files = os.listdir(self.directory)
+        test_file = f"{filename.split('.')[0]}.csv"
+        if test_file in files:
+            path = f"{self.directory}/{test_file}"
+            return path
+
         self.download_file(download_link, path)
 
         # convert xl files to csv with pandas (xl takes too much space)
