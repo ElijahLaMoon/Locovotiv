@@ -22,6 +22,10 @@ candidate = crawler.find_candidate(name=NAME)
 running_years = crawler.get_running_years(candidate)
 data_paths = [crawler.download_campaign_data(year, OFFICE_LEVEL) for year in running_years]
 
+crawler.quit()
+
+lap = time.time()
+
 # analyze each data path with a campaign analyzer
 analysts = [CampaignAnalyzer(path) for path in data_paths]
 
@@ -31,3 +35,9 @@ office_frames = [analyst.get_office_data(OFFICE_LEVEL) for analyst in analysts]
 # export the office frames one by one
 for frame in office_frames:
     frame.export_candidate_data(NAME)
+
+end = time.time()
+
+print(f"It took {round(lap - start, 2)} seconds to crawl sites.")
+print(f'It took {round(end - lap, 2)} seconds to create analytics CSVs.')
+print(f"It took {round(end - start, 2)} seconds to perform the entire process.")

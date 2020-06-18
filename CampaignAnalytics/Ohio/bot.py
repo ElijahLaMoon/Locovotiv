@@ -1,5 +1,6 @@
 from CampaignAnalytics import Crawler, Candidate, DataManager
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 import pandas as pd
 import os
 import time
@@ -53,28 +54,46 @@ class CampaignCrawler(Crawler, DataManager):
         candidate_information_raw = None
 
         for potential in candidate_information_potentials:
-            if 'active' in potential.find_element_by_xpath('//td[@headers="STATUS"]').text.lower():
+            test_activity = potential.find_element_by_xpath('//td[@headers="STATUS"]').text.strip().lower().split(' ')
+            print(test_activity)
+            if 'active' in test_activity:
                 candidate_information_raw = potential
                 break
 
         if candidate_information_raw:
             candidate_name = candidate_information_raw.find_element_by_xpath('//td[@headers="ID_COMB_NAME"]').text
             ccf_id = candidate_information_raw.find_element_by_xpath('//td[@headers="EN_PAC_NO"]').text
-            campaign_link = candidate_information_raw.find_element_by_xpath('//td[@headers="LINK$03"]').text
+            campaign_link = candidate_information_raw.find_element_by_xpath('//td[@headers="LINK$03"]//a').get_attribute('href')
 
             new_candidate = Candidate(candidate_name, ccf_id, campaign_link)
 
             return new_candidate
         else:
-            return "No active candidate found"
+            return None
 
     # create a function to add campaign information (only years are available here)
     def get_running_years(self, candidate):
+        if not candidate:
+            return set()
         url = candidate.campaign_link
         self.driver.get(url)
+        time.sleep(5)
 
         # get the years off the table (full campaign info isn't available)
-        years = {int(element.text) for element in self.driver.find_elements_by_xpath('//td[@headers="RP_YEAR"]')}
+        years = set()
+
+        # go thru all the pages
+        while True:
+            try:
+                new_years = {int(element.text) for element in self.driver.find_elements_by_xpath('//td[@headers="RP_YEAR"]')}
+                print(new_years)
+                years = years | new_years
+                next_page_button = self.driver.find_element_by_xpath('//a[@class="sPaginationNext"]')
+                next_page_button.click()
+                time.sleep(5)
+            except NoSuchElementException:
+                print(years)
+                break
 
         years = {year for year in years if ((year < MAX_YEAR) and (year > MIN_YEAR))}
         return years
