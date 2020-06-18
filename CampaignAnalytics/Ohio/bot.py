@@ -1,24 +1,29 @@
-from CampaignAnalytics import Crawler, Candidate
+from CampaignAnalytics import Crawler, Candidate, DataManager
 from selenium import webdriver
+import pandas as pd
 import os
 import time
 
 
 # create a campaign crawler that inherits from the OG
-class CampaignCrawler(Crawler):
+class CampaignCrawler(Crawler, DataManager):
     def __init__(self):
         options = webdriver.FirefoxOptions()
         options.add_argument('--headless')
 
         self.directory = f"{os.getcwd()}/Downloads/Ohio"
         try:
-            os.mkdir(self.directory)
+            os.makedirs(self.directory)
         except FileExistsError:
             pass
 
         # make the webdriver
         self.driver = webdriver.Firefox(options=options)
         self.driver.maximize_window()
+
+        # set a master_df (for default)
+        self.link_csv = f"{os.getcwd()}/CampaignAnalytics/Ohio/links.txt"
+        self.master_df = pd.read_csv(self.link_csv)
 
     def find_candidate(self, name=None):
         url = 'https://www6.ohiosos.gov/ords/f?p=CFDISCLOSURE:1:9295067691106::NO::::'
@@ -69,13 +74,21 @@ class CampaignCrawler(Crawler):
         return years
 
     # this gets all the campaign data for a candidate (no years available)
-    def download_campaign_data(self, candidate):
-        'https://www.sos.state.oh.us/globalassets/elections/2015/general/precinct.xlsx'
-        'https://www.sos.state.oh.us/globalassets/elections/2016/gen/precinctlevel.xlsx'
-        'https://www.sos.state.oh.us/globalassets/elections/2017/gen/statewideresults-byprecinct.xlsx'
-        'https://www.sos.state.oh.us/globalassets/elections/2018/gen/2018-11-06_statewideprecinct.xlsx'
+    def download_campaign_data(self, year, office_level):
+        # match the data with the current info (see txt file)
+        link_df = pd.read_csv(self.link_csv)
+        offices_df = self.filter_records('Election Year', year, filtering_df=link_df)
+        download_link = list(self.filter_records('Offices', office_level, filtering_df=offices_df)['File Name'])[0]
+
+        # download the correct year and office
+        filename = download_link.split('/')[-1]
+        path = f"{self.directory}/{filename}"
+        self.download_file(download_link, path)
 
         # convert xl files to csv with pandas (xl takes too much space)
+        new_path = self.xl_to_csv(path, sheet_index=1, delete_old=True)  # use the second sheet (master)
+
+        return new_path
 
 
 '''

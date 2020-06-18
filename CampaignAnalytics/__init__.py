@@ -1,4 +1,6 @@
 from datetime import datetime as dt
+import pandas as pd
+import requests
 import os
 
 # add the constants here
@@ -41,5 +43,54 @@ class Crawler:
 
         return row_list
 
+    def download_file(self, download_url, path):
+        response = requests.get(download_url)
+
+        with open(path, 'wb') as outfile:
+            outfile.write(response.content)
+
     def quit(self):
         self.driver.quit()
+
+
+# create a base class for analytics to build off of
+class DataManager:
+    def filter_records(self, column, value, filtering_df=pd.DataFrame()):
+        # check if the user reset the filtering df (default to the master)
+        if filtering_df.empty:
+            filtering_df = self.master_df
+
+        valid_rows = filtering_df[column] == value
+
+        applicable_df = filtering_df[valid_rows]
+
+        return applicable_df
+
+    def export_master(self, column, value):
+        # make a directory for the value (usually a name)
+        new_directory = f"{os.getcwd()}/{value}"
+        try:
+            os.mkdir(new_directory)
+        except FileExistsError:
+            pass
+
+        # overwrite the existing file no matter what
+        new_filepath = f"{new_directory}/({value}) {self.filename}"
+        new_df = self.filter_records(column, value)
+        new_df.to_csv(new_filepath, index=False)
+
+    # create a function that converts xl files to csvs (will not delete old by default)
+    def xl_to_csv(self, excel_file, sheet_index=0, delete_old=False):
+        df = pd.read_excel(excel_file, sheet_name=sheet_index)
+        print(f"Sheet index: {sheet_index}")
+
+        # make it a csv
+        path = f"{excel_file.split('.')[0]}.csv"
+        df.to_csv(path, index=False)
+
+        # delete the old file if applicable
+        if delete_old:
+            os.remove(excel_file)
+
+        # return the new filepath
+        return path

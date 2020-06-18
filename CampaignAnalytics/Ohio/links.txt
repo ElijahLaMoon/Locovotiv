@@ -1,0 +1,8 @@
+﻿Election Year,Election Type,Offices,File Name
+2012,General,State,https://www.sos.state.oh.us/globalassets/elections/2012/gen/2012statewidebyprecinct.xlsx
+2012,General,County,https://www.sos.state.oh.us/globalassets/elections/2012/gen/2012county.xlsx
+2014,General,All,https://www.sos.state.oh.us/globalassets/elections/2014/general/precinct.xlsx
+2016,General,State,https://www.sos.state.oh.us/globalassets/elections/2016/gen/precinct.xlsx
+2016,General,County,https://www.sos.state.oh.us/globalassets/elections/2016/gen/precinctlevel.xlsx
+2018,General,State,https://www.sos.state.oh.us/globalassets/elections/2018/gen/2018-11-06_statewideprecinct.xlsx
+2018,General,County,ftp://sosftp.sos.state.oh.us/free/publications/2018resultsgeneral/2018-11-06_CountyResultsprecinct.xlsx

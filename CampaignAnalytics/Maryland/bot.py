@@ -2,7 +2,6 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from CampaignAnalytics import Crawler, Campaign, Candidate, DATE, MAX_PROCESSES
 from multiprocessing import Pool
-import requests
 import time
 import os
 
@@ -15,7 +14,7 @@ class CampaignCrawler(Crawler):
 
         self.directory = f"{os.getcwd()}/Downloads/Maryland"
         try:
-            os.mkdir(self.directory)
+            os.makedirs(self.directory)
         except FileExistsError:
             pass
 
@@ -106,9 +105,6 @@ class CampaignCrawler(Crawler):
             return None
         else:
             # download it if applicable
-            response = requests.get(download_url)
-
-            with open(path, 'wb') as outfile:
-                outfile.write(response.content)
+            self.download_file(download_url, path)
 
         return path

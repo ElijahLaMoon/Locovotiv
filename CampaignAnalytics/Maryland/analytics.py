@@ -1,3 +1,4 @@
+from CampaignAnalytics import DataManager
 import pandas as pd
 import numpy as np
 import os
@@ -40,7 +41,7 @@ class PrecinctPoll:
 
 
 # create a class that sorts the data
-class DataManager:
+class CampaignAnalyzer(DataManager):
     def __init__(self, filename):
         self.filename = filename
         self.master_df = pd.read_csv(filename)
@@ -57,32 +58,6 @@ class DataManager:
 
         # add the precinct data back
         self.master_df = pd.concat([pd.DataFrame(precinct_codes, columns=['Precinct']), self.master_df], axis=1)
-
-    # create a class to get a particular candidate's records
-
-    def filter_records(self, column, value, filtering_df=pd.DataFrame()):
-        # check if the user reset the filtering df (default to the master)
-        if filtering_df.empty:
-            filtering_df = self.master_df
-
-        valid_rows = filtering_df[column] == value
-
-        applicable_df = filtering_df[valid_rows]
-
-        return applicable_df
-
-    def export_master(self, column, value):
-        # make a directory for the value (usually a name)
-        new_directory = f"{os.getcwd()}/{value}"
-        try:
-            os.mkdir(new_directory)
-        except FileExistsError:
-            pass
-
-        # overwrite the existing file no matter what
-        new_filepath = f"{new_directory}/({value}) {self.filename}"
-        new_df = self.filter_records(column, value)
-        new_df.to_csv(new_filepath, index=False)
 
     # create a function that returns a dataframe of sorted information
     def sort_file(self, office_name, candidate):

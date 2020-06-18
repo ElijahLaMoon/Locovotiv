@@ -1,5 +1,5 @@
 from CampaignAnalytics.Maryland.bot import CampaignCrawler
-from CampaignAnalytics.Maryland.analytics import DataManager
+from CampaignAnalytics.Maryland.analytics import CampaignAnalyzer
 from datetime import datetime as dt
 import time
 import sys
@@ -8,7 +8,7 @@ start = time.time()
 TARGET_COUNTY = sys.argv[2].strip().title()
 DATE = dt.now()
 
-user_input = sys.argv[1]
+user_input = sys.argv[1].strip().title()
 ccf_id = True
 
 try:
@@ -47,7 +47,7 @@ crawler.quit()
 # now for the sorting --> make some managers
 lap = time.time()
 
-managers = [DataManager(path) for path in filepaths]
+analysts = [CampaignAnalyzer(path) for path in filepaths]
 
 # make the csvs --> make a folder and export
 count = 0
@@ -58,10 +58,10 @@ for campaign in temp_campaign_list:
     if int(campaign.year) == int(DATE.year):
         candidate.campaigns.remove(campaign)
 
-for manager in managers:
+for analyst in analysts:
     campaign = candidate.campaigns[count]
 
-    manager.sort_and_export(campaign.office_sought, candidate.name, campaign.year)
+    analyst.sort_and_export(campaign.office_sought, candidate.name, campaign.year)
     count += 1
 
 
