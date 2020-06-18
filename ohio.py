@@ -1,4 +1,5 @@
 from CampaignAnalytics.Ohio.bot import CampaignCrawler
+from CampaignAnalytics.Ohio.analytics import CampaignAnalyzer
 from datetime import datetime as dt
 import time
 import sys
@@ -13,7 +14,7 @@ OFFICE_LEVEL = sys.argv[2].strip().title()
 crawler = CampaignCrawler()
 
 # find the candidate
-candidate = crawler.find_candidarte(name=NAME)
+candidate = crawler.find_candidate(name=NAME)
 
 # get the running years --> download them
 running_years = crawler.get_running_years(candidate)

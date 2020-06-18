@@ -44,10 +44,7 @@ class PrecinctPoll:
 class CampaignAnalyzer(DataManager):
     def __init__(self, filename):
         self.filename = filename
-        self.master_df = pd.read_csv(filename)
-
-        # set up the dataframe correctly
-        self.master_df = self.master_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        self.master_df = self.setup_df(pd.read_csv(filename))
 
         # set up precincts
         counties = np.array(self.master_df['Election District']) * 1000

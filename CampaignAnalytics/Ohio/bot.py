@@ -4,6 +4,10 @@ import pandas as pd
 import os
 import time
 
+# set the min and max years depending on the
+MIN_YEAR = 2014
+MAX_YEAR = 2018
+
 
 # create a campaign crawler that inherits from the OG
 class CampaignCrawler(Crawler, DataManager):
@@ -70,7 +74,9 @@ class CampaignCrawler(Crawler, DataManager):
         self.driver.get(url)
 
         # get the years off the table (full campaign info isn't available)
-        years = {element.text for element in self.driver.find_elements_by_xpath('//td[@headers="RP_YEAR"]')}
+        years = {int(element.text) for element in self.driver.find_elements_by_xpath('//td[@headers="RP_YEAR"]')}
+
+        years = {year for year in years if ((year < MAX_YEAR) and (year > MIN_YEAR))}
         return years
 
     # this gets all the campaign data for a candidate (no years available)
@@ -82,6 +88,11 @@ class CampaignCrawler(Crawler, DataManager):
 
         # download the correct year and office
         filename = download_link.split('/')[-1]
+
+        # check if the year is in the filename
+        if not (str(year) in filename):
+            filename = f"{year}_{filename}"
+
         path = f"{self.directory}/{filename}"
         self.download_file(download_link, path)
 

@@ -1,6 +1,9 @@
 from datetime import datetime as dt
 import pandas as pd
 import requests
+from urllib.request import urlopen
+from contextlib import closing
+import shutil
 import os
 
 # add the constants here
@@ -44,10 +47,17 @@ class Crawler:
         return row_list
 
     def download_file(self, download_url, path):
-        response = requests.get(download_url)
+        # check for ftp
+        if 'ftp' in download_url.split(':')[0].lower():
+            with closing(urlopen(download_url)) as r:
+                with open(path, 'wb') as f:
+                    shutil.copyfileobj(r, f)
 
-        with open(path, 'wb') as outfile:
-            outfile.write(response.content)
+        else:
+            response = requests.get(download_url)
+
+            with open(path, 'wb') as outfile:
+                outfile.write(response.content)
 
     def quit(self):
         self.driver.quit()
@@ -81,8 +91,11 @@ class DataManager:
 
     # create a function that converts xl files to csvs (will not delete old by default)
     def xl_to_csv(self, excel_file, sheet_index=0, delete_old=False):
-        df = pd.read_excel(excel_file, sheet_name=sheet_index)
-        print(f"Sheet index: {sheet_index}")
+        try:
+            df = pd.read_excel(excel_file, sheet_name=sheet_index)
+        except IndexError:
+            # use the first sheet if there isnt an index
+            df = pd.read_excel(excel_file)
 
         # make it a csv
         path = f"{excel_file.split('.')[0]}.csv"
@@ -94,3 +107,30 @@ class DataManager:
 
         # return the new filepath
         return path
+
+    def setup_df(self, df):
+        # set up the master df
+        clean_df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+        return clean_df
+
+    # create functions to set and get the start column
+    def set_start_col(self, filepath, start_col):
+        # convert the start column to an int
+        start_col = int(start_col)
+
+        new_name_split = filepath.split('.')
+
+        # insert the name with an underscore
+        new_name = f"{new_name_split[0]}_{start_col}.{new_name_split[-1]}"
+
+        # rename it
+        os.rename(filepath, new_name)
+
+        return new_name
+
+    def get_start_col(self, filepath):
+        # use the added underscore to get the start col
+        start_col = int(filepath.split('_')[-1].split('.')[0])
+
+        return start_col
