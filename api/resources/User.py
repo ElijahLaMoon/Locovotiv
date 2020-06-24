@@ -121,3 +121,26 @@ class AdminUserManagementResource(Resource):
         db.session.commit()
 
         return {'status': 'success', 'message': f"Deleted {user_email}"}, 201
+
+
+# create a class for login verification
+class LoginResource(Resource):
+    def post(self):
+        data = load_json()
+
+        # get the data
+        try:
+            email = data['email']
+            password = data['password']
+        except KeyError:
+            return {'message': 'email and password are required'}, 422
+
+        # choose whether the email and password match or not
+        validated, user, code = validate_user(email, password)
+
+        if validated:
+            output = {'status': 'success'}
+        else:
+            output = user
+
+        return output, code
