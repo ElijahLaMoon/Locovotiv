@@ -42,7 +42,7 @@ pyrsistent==0.16.0
 pyserial==3.4
 python-apt==1.6.5+ubuntu0.3
 python-debian==0.1.37
-PyYAML==3.12
+PyYAML==5.1
 requests==2.24.0
 requests-unixsocket==0.2.0
 service-identity==18.1.0
