@@ -1,10 +1,17 @@
 from flask_restful import Resource
 from api.resources import load_json
-from api.models import db, User, validate_user, validate_admin
-from api import bcrypt
+from api.models import db, User, validate_user
+from api import bcrypt, app
+from datetime import datetime as dt, timedelta
+import jwt
 
+
+# make a constant for how long until timeout
+TOKEN_MINUTES = 120
 
 # create a resource for user addition
+
+
 class UserManagementResource(Resource):
     # create users
     def post(self):
@@ -84,45 +91,6 @@ class UserManagementResource(Resource):
         return {'status': 'success', 'message': f"Deleted account attached to {user.email}"}, 201
 
 
-# create a class for admins to get all the user data
-class AdminUserManagementResource(Resource):
-    # create a post method to get all the users
-    def post(self):
-        # get the admin_data and authenticate the admin
-        data = load_json()
-
-        # validate the admin
-        if not validate_admin(data['email'], data['password']):
-            return {'message': 'You are not allowed to access this resource.'}, 403
-
-        # get the data from all the users
-        users = [{'email': user.email} for user in User.query.all()]
-
-        return {'users': users}, 201
-
-    # create a method to delete users from the admin page (without a password)
-    def delete(self):
-        data = load_json()
-
-        # validate the admin
-        if not validate_admin(data['email'], data['password']):
-            return {'message': 'You are not allowed to access this resource.'}, 403
-
-        # find the user to delete via email
-        user_email = data['user_email']
-        user = User.query.filter_by(email=user_email).first()
-
-        # if no user, return so
-        if not user:
-            return {'message': f"no account associated with {user_email}"}, 404
-
-        # else delete the user
-        db.session.delete(user)
-        db.session.commit()
-
-        return {'status': 'success', 'message': f"Deleted {user_email}"}, 201
-
-
 # create a class for login verification
 class LoginResource(Resource):
     def post(self):
@@ -139,8 +107,21 @@ class LoginResource(Resource):
         validated, user, code = validate_user(email, password)
 
         if validated:
-            output = {'status': 'success'}
+            output = {'status': 'success', 'loggedIn': True}
         else:
+            user['loggedIn'] = False
             output = user
 
+        # add a token to the output
+        token = jwt.encode({'id': user.id, 'exp': dt.utcnow() + timedelta(minutes=TOKEN_MINUTES)}, app.config.get('SECRET_KEY'))
+        output['token'] = token.decode('UTF-8')
+
         return output, code
+
+
+'''
+NOTES
+- see this link for token info: https://geekflare.com/securing-flask-api-with-jwt/
+
+token = jwt.encode({'id': 7, 'exp': dt.utcnow() + timedelta(minutes=10)}, 'c0115a8363cdd98b3c822c1adba5a7c9')
+'''
